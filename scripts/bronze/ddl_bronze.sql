@@ -105,3 +105,8 @@ END $$;
 
 
 
+-- Calling the above sored procedure to load the data
+call Bronze.load_bronze()
+
+
+
