@@ -102,7 +102,7 @@ delimiter ','
 csv Header;
 
 END $$;
-
+ 
 
 
 -- Calling the above sored procedure to load the data
