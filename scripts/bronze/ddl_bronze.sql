@@ -1,3 +1,56 @@
+-- Creating a Table for all the files that has to be loaded
+
+Create Table Bronze.crm_prd_info(
+prd_id int,
+prd_key varchar(50),
+prd_name varchar(50),
+prd_cost int,
+prd_line varchar(50),
+prd_start_dt date,
+prd_end_dt  date
+);
+
+drop table Bronze.crm_sales_details;
+create table Bronze.crm_sales_details(
+sls_ord_num varchar(50),
+sls_prd_key varchar(50),
+sls_cust_id int,
+sls_order_dt int,
+sls_ship_dt int,
+sls_due_dt int,
+sls_sales int,
+sls_quantity int,
+sls_price int
+
+);
+
+
+create table Bronze.erp_cust_az12(
+cid varchar(50),
+bdate date,
+gen varchar(50)
+
+);
+
+
+create table Bronze.erp_loc_a101(
+cid varchar(50),
+country varchar(50)
+
+);
+
+
+
+create table Bronze.erp_px_cat_g1v2(
+id varchar(50),
+cat varchar(50),
+suncat varchar(50),
+maintenance varchar(50)
+
+);
+
+
+
 -- Loading the data fro csv Files to sql server using copy function 
 -- Data base use is postgreSql
 Create or replace  procedure Bronze.load_bronze()
