@@ -1,11 +1,17 @@
--- PROCEDURE: silver.silver_load()
+call silver.silver_load();
 
--- DROP PROCEDURE IF EXISTS silver.silver_load();
+-- DROP PROCEDURE IF EXISTS silver.load_silver;
 
-CREATE OR REPLACE PROCEDURE silver.silver_load(
-	)
-LANGUAGE 'sql'
-AS $BODY$
+
+-- SELECT proname, nspname 
+-- FROM pg_proc p
+-- JOIN pg_namespace n ON p.pronamespace = n.oid
+-- WHERE proname = 'load_silver';
+
+
+CREATE or REPLACE Procedure  silver.load_silver()
+LANGUAGE plpgsql
+AS $$
 -- Transforming crm_cust_info
 -- Checking duplicate Values
 -- Removing White Spaces
@@ -57,6 +63,7 @@ select
       Else null end as gen
 from bronze.erp_cust_az12;
 
+
 -- Transforming crm_prd_info 
 truncate table silver.crm_prd_info;
 Insert into silver.crm_prd_info(
@@ -72,7 +79,7 @@ prd_end_dt
 
 select
 prd_id,
-prd_key, 
+SUBSTRING(prd_key, 7, LENgth(prd_key)) AS prd_key,  
 -- here we are taking the sustring and replacing '-' with '_' to use it with other tables
 replace ( substring( prd_key, 1, 5), '-', '_') as cat_id, 
 prd_name,
@@ -84,6 +91,41 @@ prd_start_dt,
 -- using lead () window function to get he next entry for current row
 lead(prd_start_dt) over(partition by prd_key order by prd_start_dt)-1 as prd_end_dt
 from bronze.crm_prd_info;
+
+
+-- Loading Sales table
+truncate table silver.crm_sales_details
+Insert into silver.crm_sales_details(
+sls_ord_num ,
+sls_prd_key ,
+sls_cust_id ,
+sls_order_dt ,
+sls_due_dt ,
+sls_ship_dt ,
+sls_sales ,
+sls_quantity ,
+sls_price
+)
+select 
+sls_ord_num,
+sls_prd_key,
+sls_cust_id,
+case when sls_order_dt = 0 or length(sls_order_dt::TEXT) < 8  then null
+     else to_date(CAST(sls_order_dt as TEXT), 'YYYYMMDD') 
+end as sls_order_dt,
+
+case when sls_due_dt = 0 or length(sls_due_dt::TEXT) < 8  then null
+     else to_date(CAST(sls_due_dt as TEXT), 'YYYYMMDD') 
+end as sls_due_dt,
+
+case when sls_ship_dt = 0 or length(sls_ship_dt::TEXT) < 8  then null
+     else to_date(CAST(sls_ship_dt as TEXT), 'YYYYMMDD') 
+end as sls_ship_dt,
+sls_sales,
+sls_quantity,
+sls_price
+from bronze.crm_sales_details;
+
 
 -- Loading Silver.erp_loc_a101
 -- Performed basic cleaning
@@ -107,6 +149,4 @@ cat,
 suncat,
 maintenance)
 select * from bronze.erp_px_cat_g1v2;
-$BODY$;
-ALTER PROCEDURE silver.silver_load()
-    OWNER TO postgres;
+ $$;
